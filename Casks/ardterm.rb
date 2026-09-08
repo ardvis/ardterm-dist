@@ -5,7 +5,7 @@ cask "ardterm" do
   name "Ardterm"
   desc "Native macOS terminal with authenticated remote sessions"
   homepage "https://github.com/ardvis/ardterm-dist"
-  depends_on macos: ">= :tahoe"
+  depends_on macos: :tahoe
   depends_on arch: :arm64
   app "Ardterm.app"
 end
