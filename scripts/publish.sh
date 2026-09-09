@@ -18,6 +18,8 @@ gh release download "v$version" --repo ardvis/ardterm-dist --dir "$verify" --pat
 (cd "$verify" && shasum -a 256 -c SHA256SUMS)
 ditto -x -k "$verify/Ardterm-macos-arm64.zip" "$verify"
 codesign --verify --deep --strict "$verify/Ardterm.app"
+test -s "$verify/Ardterm.app/Contents/Resources/Legal/THIRD_PARTY_NOTICES.txt"
+test -s "$verify/Ardterm.app/Contents/Resources/Ardterm_ArdtermCLI.bundle/Legal/catalog.json"
 xcrun stapler validate "$verify/Ardterm.app"
 gh release edit "v$version" --repo ardvis/ardterm-dist --draft=false
 mkdir -p "$root/Casks"

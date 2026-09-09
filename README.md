@@ -3,6 +3,11 @@
 This public repository hosts signed, notarized macOS 26 arm64 releases and the
 Homebrew cask. It contains no application source or signing credentials.
 
+Read [licensing and legal information](LICENSING.md). New releases include
+**Ardterm → Legal & Privacy…**, `ardterm --licenses`, and plain-text notices in
+`Ardterm.app/Contents/Resources/Legal`. Use the notices supplied with your exact
+app version. Existing published archives are not changed by this documentation.
+
 The source repository's `scripts/release.sh` prepares an immutable versioned
 archive, checksums, dependency lockfile, source revision, and `ardterm.rb`.
 Before the first release there is deliberately no installable cask: its checksum
