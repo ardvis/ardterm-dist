@@ -18,10 +18,12 @@ required_assets=(Ardterm-macos-arm64.zip SHA256SUMS Package.resolved release.jso
 # discover the accepted files and upload only what is still missing.
 if gh api "$release_api" >/dev/null 2>&1; then
   draft="$(gh api "$release_api" --jq '.draft')"
+  release_id="$(gh api "$release_api" --jq '.id')"
 else
   gh release create "$tag" --repo ardvis/ardterm-dist --draft \
     --title "Ardterm $version" --notes "Signed and notarized macOS 26 arm64 release."
   draft="$(gh api "$release_api" --jq '.draft')"
+  release_id="$(gh api "$release_api" --jq '.id')"
 fi
 case "$draft" in
   true)
@@ -35,7 +37,7 @@ case "$draft" in
     exit 1
     ;;
 esac
-existing_assets="$(gh api "$release_api/assets?per_page=100" --jq '.[].name')"
+existing_assets="$(gh api "repos/ardvis/ardterm-dist/releases/$release_id/assets?per_page=100" --jq '.[].name')"
 for asset in "${required_assets[@]}"; do
   if grep -Fqx -- "$asset" <<<"$existing_assets"; then
     continue
