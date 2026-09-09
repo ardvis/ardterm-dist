@@ -10,21 +10,24 @@ version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["vers
 (cd "$assets" && shasum -a 256 -c SHA256SUMS)
 ruby -c "$assets/ardterm.rb"
 tag="v$version"
-release_api="repos/ardvis/ardterm-dist/releases/tags/$tag"
 required_assets=(Ardterm-macos-arm64.zip SHA256SUMS Package.resolved release.json)
+
+find_release() {
+  gh api "repos/ardvis/ardterm-dist/releases?per_page=100" \
+    --jq ".[] | select(.tag_name == \"$tag\") | [.id, .draft] | @tsv" | head -n 1
+}
 
 # Create the draft separately from asset uploads. GitHub can return an upload
 # error after accepting an asset; keeping the draft lets a later invocation
 # discover the accepted files and upload only what is still missing.
-if gh api "$release_api" >/dev/null 2>&1; then
-  draft="$(gh api "$release_api" --jq '.draft')"
-  release_id="$(gh api "$release_api" --jq '.id')"
-else
+release_record="$(find_release)"
+if [[ -z "$release_record" ]]; then
   gh release create "$tag" --repo ardvis/ardterm-dist --draft \
     --title "Ardterm $version" --notes "Signed and notarized macOS 26 arm64 release."
-  draft="$(gh api "$release_api" --jq '.draft')"
-  release_id="$(gh api "$release_api" --jq '.id')"
+  release_record="$(find_release)"
 fi
+[[ -n "$release_record" ]] || { echo "Could not resolve GitHub release $tag" >&2; exit 1; }
+IFS=$'\t' read -r release_id draft <<< "$release_record"
 case "$draft" in
   true)
     ;;
@@ -46,7 +49,10 @@ for asset in "${required_assets[@]}"; do
     echo "Published release $tag is missing immutable asset $asset" >&2
     exit 1
   fi
-  gh release upload "$tag" "$assets/$asset" --repo ardvis/ardterm-dist
+  gh api --method POST \
+    --header 'Content-Type: application/octet-stream' \
+    "https://uploads.github.com/repos/ardvis/ardterm-dist/releases/$release_id/assets?name=$asset" \
+    --input "$assets/$asset" >/dev/null
 done
 verify="$(mktemp -d)"
 trap 'rm -rf "$verify"' EXIT
