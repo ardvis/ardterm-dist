@@ -14,10 +14,12 @@ Before the first release there is deliberately no installable cask: its checksum
 and download URL must identify an actual verified release.
 
 After reviewing those outputs, run `scripts/publish.sh /absolute/release-directory`
-on the signing Mac. It creates a draft, downloads and verifies its assets, publishes
-it, and writes `Casks/ardterm.rb`. Commit and push that cask only after the release
-is public. If interrupted, inspect the existing draft; do not overwrite a published
-version. A changed binary requires a new patch version.
+on the signing Mac. It creates or resumes a draft, uploads only missing assets,
+downloads and verifies the published archive, publishes it, and writes
+`Casks/ardterm.rb`. The command is safe to rerun after an upload or local failure:
+it never replaces assets in a published release and verifies an existing published
+version before updating the cask. Commit and push that cask only after the release
+is public. A changed binary requires a new patch version.
 
 After publication:
 
