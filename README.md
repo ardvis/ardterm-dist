@@ -8,18 +8,18 @@ Read [licensing and legal information](LICENSING.md). New releases include
 `Ardterm.app/Contents/Resources/Legal`. Use the notices supplied with your exact
 app version. Existing published archives are not changed by this documentation.
 
-The source repository's `scripts/release.sh` prepares an immutable versioned
-archive, checksums, dependency lockfile, source revision, and `ardterm.rb`.
-Before the first release there is deliberately no installable cask: its checksum
-and download URL must identify an actual verified release.
+The source repository's `scripts/release.sh` is the only release entrypoint. It
+uses this checked-out repository, creates an immutable versioned archive,
+checksums, dependency lockfile, source revision, and cask, then creates or
+resumes the GitHub Release, verifies every asset, publishes it, and commits and
+pushes `Casks/ardterm.rb`. Before the first release there is deliberately no
+installable cask: its checksum and download URL must identify an actual verified
+release.
 
-After reviewing those outputs, run `scripts/publish.sh /absolute/release-directory`
-on the signing Mac. It creates or resumes a draft, uploads only missing assets,
-downloads and verifies the published archive, publishes it, and writes
-`Casks/ardterm.rb`. The command is safe to rerun after an upload or local failure:
-it never replaces assets in a published release and verifies an existing published
-version before updating the cask. Commit and push that cask only after the release
-is public. A changed binary requires a new patch version.
+The publication helper in `scripts/publish.sh` is internal and refuses direct
+invocation. A rerun through the source release command safely resumes accepted
+assets, verifies their exact contents, and repairs a failed cask push. A changed
+binary requires a new patch version.
 
 After publication:
 
