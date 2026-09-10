@@ -13,8 +13,9 @@ tag="v$version"
 required_assets=(Ardterm-macos-arm64.zip SHA256SUMS Package.resolved release.json)
 
 find_release() {
-  gh api "repos/ardvis/ardterm-dist/releases?per_page=100" \
-    --jq ".[] | select(.tag_name == \"$tag\") | [.id, .draft] | @tsv" | head -n 1
+  gh release view "$tag" --repo ardvis/ardterm-dist \
+    --json databaseId,isDraft,tagName \
+    --jq '[.databaseId, .isDraft, .tagName] | @tsv' 2>/dev/null || true
 }
 
 # Create the draft separately from asset uploads. GitHub can return an upload
@@ -24,7 +25,11 @@ release_record="$(find_release)"
 if [[ -z "$release_record" ]]; then
   gh release create "$tag" --repo ardvis/ardterm-dist --draft \
     --title "Ardterm $version" --notes "Signed and notarized macOS 26 arm64 release."
-  release_record="$(find_release)"
+  for attempt in {1..10}; do
+    release_record="$(find_release)"
+    [[ -n "$release_record" ]] && break
+    sleep 1
+  done
 fi
 [[ -n "$release_record" ]] || { echo "Could not resolve GitHub release $tag" >&2; exit 1; }
 IFS=$'\t' read -r release_id draft <<< "$release_record"
