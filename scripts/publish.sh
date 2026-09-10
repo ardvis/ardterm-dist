@@ -20,8 +20,8 @@ required_assets=(Ardterm-macos-arm64.zip SHA256SUMS Package.resolved release.jso
 
 find_release() {
   gh release view "$tag" --repo ardvis/ardterm-dist \
-    --json databaseId,isDraft,tagName \
-    --jq '[.databaseId, .isDraft, .tagName] | @tsv' 2>/dev/null || true
+    --json databaseId,isDraft \
+    --jq '[.databaseId, .isDraft] | @tsv' 2>/dev/null || true
 }
 
 # Create the draft separately from asset uploads. GitHub can return an upload
