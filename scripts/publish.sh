@@ -2,6 +2,7 @@
 # Internal publication step invoked by ../ardterm/scripts/release.sh.
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
+build_root="$root/.build/prod"
 [[ "${ARDTERM_RELEASE_PUBLISH_READY:-}" == 1 ]] || {
   echo 'Run ../ardterm/scripts/release.sh; this publisher is not a release entry point.' >&2
   exit 64
@@ -52,13 +53,15 @@ case "$draft" in
     ;;
 esac
 existing_assets="$(gh api "repos/ardvis/ardterm-dist/releases/$release_id/assets?per_page=100" --jq '.[].name')"
-existing_verify="$(mktemp -d)"
+existing_verify="$build_root/existing-assets"
 verify=""
 cleanup() {
-  rm -rf "$existing_verify"
-  [[ -z "$verify" ]] || rm -rf "$verify"
+  rm -rf -- "$existing_verify"
+  [[ -z "$verify" ]] || rm -rf -- "$verify"
 }
 trap cleanup EXIT
+rm -rf -- "$existing_verify"
+mkdir -p "$existing_verify"
 for asset in "${required_assets[@]}"; do
   if grep -Fqx -- "$asset" <<<"$existing_assets"; then
     gh release download "$tag" --repo ardvis/ardterm-dist --dir "$existing_verify" --pattern "$asset"
@@ -77,7 +80,9 @@ for asset in "${required_assets[@]}"; do
     "https://uploads.github.com/repos/ardvis/ardterm-dist/releases/$release_id/assets?name=$asset" \
     --input "$assets/$asset" >/dev/null
 done
-verify="$(mktemp -d)"
+verify="$build_root/verification"
+rm -rf -- "$verify"
+mkdir -p "$verify"
 gh release download "$tag" --repo ardvis/ardterm-dist --dir "$verify" --pattern 'Ardterm-macos-arm64.zip' --pattern SHA256SUMS
 (cd "$verify" && shasum -a 256 -c SHA256SUMS)
 ditto -x -k "$verify/Ardterm-macos-arm64.zip" "$verify"
