@@ -88,7 +88,11 @@ gh release download "$tag" --repo ardvis/ardterm-dist --dir "$verify" --pattern 
 ditto -x -k "$verify/Ardterm-macos-arm64.zip" "$verify"
 codesign --verify --deep --strict "$verify/Ardterm.app"
 test -s "$verify/Ardterm.app/Contents/Resources/Legal/THIRD_PARTY_NOTICES.txt"
-test -s "$verify/Ardterm.app/Contents/Resources/Ardterm_ArdtermCLI.bundle/Legal/catalog.json"
+cli_bundle="$verify/Ardterm.app/Contents/Resources/Ardterm_ArdtermCLI.bundle"
+# SwiftPM stages a resource bundle flat beside the executable for command-line
+# builds and nests it under Contents/Resources when it assembles an app.
+[[ -d "$cli_bundle/Legal" ]] || cli_bundle="$cli_bundle/Contents/Resources"
+test -s "$cli_bundle/Legal/catalog.json"
 xcrun stapler validate "$verify/Ardterm.app"
 if [[ "$draft" == true ]]; then
   gh release edit "$tag" --repo ardvis/ardterm-dist --draft=false
